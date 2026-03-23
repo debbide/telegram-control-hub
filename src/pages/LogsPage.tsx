@@ -46,7 +46,7 @@ const LogsPage = () => {
                            log.source.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesLevel = levelFilter === "all" || log.level === levelFilter;
       return matchesSearch && matchesLevel;
-    }).reverse(); // 最新的在上面
+    }); // 后端已按最新在前返回
   }, [logs, searchQuery, levelFilter]);
 
   const handleClearLogs = async () => {
