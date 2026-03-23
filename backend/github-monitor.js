@@ -520,19 +520,21 @@ class GitHubMonitor {
               hour12: false,
             }).replace(/\//g, '-')
           : '未知时间';
-        return `📦 <a href="${repo.htmlUrl}">${repo.fullName}</a>\n   🕒 <i>${updatedAt}</i>`;
+        return `${idx + 1}. <a href="${repo.htmlUrl}">${repo.fullName}</a>\n   <i>${updatedAt}</i>`;
       });
 
-      const extraLine = data.updatedCount > 6 ? `\n<i>... 另外 ${data.updatedCount - 6} 个仓库更新</i>` : '';
+      const extraLine = data.updatedCount > 6 ? `... 另外 ${data.updatedCount - 6} 个仓库更新` : '';
 
       return [
-        `🐙 <b>GitHub 账号更新</b>`,
-        `👤 <b>${data.owner}</b>  ·  <b>${data.updatedCount}</b> 个仓库`,
+        `<b>GitHub 账号更新</b>`,
         ``,
-        repoLines.join('\n'),
-        extraLine,
+        `账号：<b>${data.owner}</b>`,
+        `更新：<b>${data.updatedCount}</b> 个仓库`,
         ``,
-        `👀 <a href="${data.profileUrl}">查看主页</a>`,
+        repoLines.join('\n\n'),
+        extraLine ? `\n${extraLine}` : '',
+        ``,
+        `<a href="${data.profileUrl}">GitHub 主页</a>`,
       ].filter(Boolean).join('\n');
     }
 
