@@ -2533,6 +2533,12 @@ async function startBot() {
   }
 
   let settings = loadSettings();
+  const maskedSecretValue = '***已配置***';
+
+  if (settings.botToken === maskedSecretValue) {
+    logger.warn('⚠️ 检测到无效的 botToken 掩码值，已视为未配置');
+    settings.botToken = '';
+  }
 
   // 首次启动时从环境变量读取并保存（仅当 config.json 中未配置时）
   if (!settings.botToken && process.env.BOT_TOKEN) {
