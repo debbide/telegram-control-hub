@@ -133,6 +133,12 @@ app.post('/api/settings', async (req, res) => {
     const currentSettings = loadSettings();
     const newSettings = mergeSettingsWithSecretProtection(currentSettings, req.body || {});
     saveSettings(newSettings);
+
+    if (githubMonitor) {
+      const appliedMinutes = githubMonitor.updateCheckIntervalFromSettings(newSettings);
+      githubMonitor.updateCheckInterval(appliedMinutes);
+    }
+
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });

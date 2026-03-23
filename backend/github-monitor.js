@@ -11,6 +11,37 @@ class GitHubMonitor {
     this.onUpdate = onUpdate;
     this.timer = null;
     this.checkInterval = 10 * 60 * 1000; // 默认 10 分钟检查一次
+    this.updateCheckIntervalFromSettings(loadSettings());
+  }
+
+  normalizeIntervalMinutes(rawValue) {
+    const num = Number(rawValue);
+    if (!Number.isFinite(num)) return 10;
+    const rounded = Math.round(num);
+    if (rounded < 1) return 1;
+    if (rounded > 1440) return 1440;
+    return rounded;
+  }
+
+  updateCheckIntervalFromSettings(settings) {
+    const minutes = this.normalizeIntervalMinutes(settings?.github?.checkInterval ?? 10);
+    this.checkInterval = minutes * 60 * 1000;
+    return minutes;
+  }
+
+  updateCheckInterval(minutes) {
+    const normalized = this.normalizeIntervalMinutes(minutes);
+    this.checkInterval = normalized * 60 * 1000;
+
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = setInterval(() => {
+        this.checkAll();
+      }, this.checkInterval);
+    }
+
+    this.logger.info(`🐙 GitHub 监控间隔已更新: ${normalized} 分钟`);
+    return normalized;
   }
 
   /**
@@ -21,7 +52,8 @@ class GitHubMonitor {
       this.stop();
     }
 
-    this.logger.info('🐙 启动 GitHub 仓库监控');
+    const currentMinutes = this.updateCheckIntervalFromSettings(loadSettings());
+    this.logger.info(`🐙 启动 GitHub 仓库监控 (间隔 ${currentMinutes} 分钟)`);
 
     // 延迟 30 秒后首次检查（避免启动时压力过大）
     setTimeout(() => {

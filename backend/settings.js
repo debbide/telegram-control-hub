@@ -31,6 +31,9 @@ const DEFAULT_SETTINGS = {
     messageTemplate: '📰 <b>{feed_title}</b>\n{title}\n{link}', // 消息模板
     // 可用变量: {feed_title}, {title}, {link}, {description}, {date}
   },
+  github: {
+    checkInterval: 10, // 默认检查间隔(分钟)
+  },
   features: {
     ai: true,
     rss: true,

@@ -97,6 +97,9 @@ export interface BotSettings {
     customChatId?: string;
     messageTemplate?: string;
   };
+  github?: {
+    checkInterval?: number;
+  };
 }
 
 export const settingsApi = {

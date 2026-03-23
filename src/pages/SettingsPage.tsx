@@ -64,6 +64,9 @@ const SettingsPage = () => {
     openaiKey: "",
     openaiBaseUrl: "https://api.openai.com/v1",
     openaiModel: "gpt-3.5-turbo",
+    github: {
+      checkInterval: 10,
+    },
   });
 
   // 加载设置
@@ -334,6 +337,31 @@ const SettingsPage = () => {
                   </Badge>
                 ))}
               </div>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-2">
+              <Label htmlFor="githubCheckInterval">GitHub 监控间隔（分钟）</Label>
+              <select
+                id="githubCheckInterval"
+                value={config.github?.checkInterval || 10}
+                onChange={(e) =>
+                  setConfig({
+                    ...config,
+                    github: {
+                      ...(config.github || {}),
+                      checkInterval: parseInt(e.target.value, 10),
+                    },
+                  })
+                }
+                className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+              >
+                {[5, 10, 15, 30, 60].map((m) => (
+                  <option key={m} value={m}>{m} 分钟</option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground">仓库监控和账号监控共用这个检查间隔</p>
             </div>
           </CardContent>
         </Card>
