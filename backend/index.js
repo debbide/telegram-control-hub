@@ -33,6 +33,24 @@ let currentBot = null;
 let scheduler = null;
 let githubMonitor = null;
 
+function resolveTrustProxy() {
+  const raw = process.env.TRUST_PROXY;
+
+  if (raw === undefined || raw === null || raw === '') {
+    return process.env.NODE_ENV === 'production' ? 1 : false;
+  }
+
+  const normalized = String(raw).trim().toLowerCase();
+  if (normalized === 'true') return true;
+  if (normalized === 'false') return false;
+  if (/^\d+$/.test(normalized)) return Number(normalized);
+  return raw;
+}
+
+const trustProxy = resolveTrustProxy();
+app.set('trust proxy', trustProxy);
+logger.info(`🌐 Express trust proxy: ${String(trustProxy)}`);
+
 // Middleware
 app.use(cors());
 app.use(express.json());
