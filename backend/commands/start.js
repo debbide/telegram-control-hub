@@ -11,25 +11,25 @@ const RESTART_FLAG_FILE = path.join(DATA_PATH, 'restart_flag.json');
 // 菜单定义
 const MENUS = {
   main: {
-    text: (ctx) => `👋 <b>你好，${ctx.from.first_name}！</b>\n\n我是你的多功能助手，请选择功能分类：`,
+    text: (ctx) => `👋 <b>你好，${ctx.from.first_name}！</b>\n\n欢迎使用控制面板，选择一个功能开始：`,
     buttons: [
       [
-        { text: '🛠️ 实用工具', callback_data: 'menu_tools' },
-        { text: '🤖 AI 助手', callback_data: 'menu_ai' },
-      ],
-      [
-        { text: '📝 记录提醒', callback_data: 'menu_records' },
         { text: '📰 RSS 订阅', callback_data: 'menu_rss' },
+        { text: '🎨 贴纸管理', callback_data: 'menu_stickers' },
       ],
       [
-        { text: '🌐 网络工具', callback_data: 'menu_network' },
+        { text: '⏰ 提醒事项', callback_data: 'menu_reminders' },
+        { text: '🛠️ 实用工具', callback_data: 'menu_tools' },
+      ],
+      [
+        { text: '🤖 AI 助手', callback_data: 'menu_ai' },
         { text: '⚙️ 系统设置', callback_data: 'menu_settings' },
       ],
       [{ text: '❓ 帮助信息', callback_data: 'menu_help' }],
     ],
   },
   tools: {
-    text: '🛠️ <b>实用工具</b>\n\n点击按钮查看详细用法：',
+    text: '🛠️ <b>实用工具</b>\n\n常用命令速览：\n<code>/weather 城市</code>\n<code>/rate 100 USD CNY</code>\n<code>/qr 文本</code>\n<code>/short URL</code>\n<code>/ip IP地址</code>',
     buttons: [
       [
         { text: '🌐 翻译', callback_data: 'help_tr' },
@@ -42,6 +42,9 @@ const MENUS = {
       [
         { text: '💰 汇率', callback_data: 'help_rate' },
         { text: '🆔 ID查询', callback_data: 'help_id' },
+      ],
+      [
+        { text: '🌐 网络工具', callback_data: 'menu_network' },
       ],
       [{ text: '🔙 返回主菜单', callback_data: 'menu_main' }],
     ],
@@ -67,15 +70,43 @@ const MENUS = {
     ],
   },
   rss: {
-    text: '📰 <b>RSS 订阅</b>\n\n订阅网站更新并推送到群组：',
+    text: '📰 <b>RSS 订阅</b>\n\n推荐流程：添加订阅 -> 查看列表 -> 调整关键词/间隔',
     buttons: [
       [
-        { text: '➕ 添加订阅', callback_data: 'help_rss_add' },
-        { text: '📋 查看列表', callback_data: 'help_rss_list' },
+        { text: '➕ 添加订阅', callback_data: 'rss_add_prompt' },
+        { text: '📋 查看列表', callback_data: 'rss_list_back' },
       ],
       [
-        { text: '⚙️ 管理关键词', callback_data: 'help_rss_kw' },
-        { text: '⏱️ 设置间隔', callback_data: 'help_rss_interval' },
+        { text: '⚙️ 关键词说明', callback_data: 'help_rss_kw' },
+        { text: '⏱️ 间隔说明', callback_data: 'help_rss_interval' },
+      ],
+      [{ text: '🔄 刷新全部', callback_data: 'rss_refresh_all' }],
+      [{ text: '🔙 返回主菜单', callback_data: 'menu_main' }],
+    ],
+  },
+  stickers: {
+    text: '🎨 <b>贴纸管理</b>\n\n先发一张贴纸给我即可快速收藏或添加到贴纸包。',
+    buttons: [
+      [
+        { text: '📋 我的收藏', callback_data: 'stickers_list' },
+        { text: '📦 我的贴纸包', callback_data: 'mypack_list' },
+      ],
+      [
+        { text: '➕ 新建贴纸包', callback_data: 'newpack_start' },
+        { text: '📚 批量建包说明', callback_data: 'help_createpack' },
+      ],
+      [{ text: '🔙 返回主菜单', callback_data: 'menu_main' }],
+    ],
+  },
+  reminders: {
+    text: '⏰ <b>提醒事项</b>\n\n支持一次性、循环提醒，推荐先创建一个测试提醒。',
+    buttons: [
+      [
+        { text: '➕ 添加提醒', callback_data: 'remind_add_prompt' },
+        { text: '📋 提醒列表', callback_data: 'reminders_list' },
+      ],
+      [
+        { text: '📝 用法说明', callback_data: 'help_remind' },
       ],
       [{ text: '🔙 返回主菜单', callback_data: 'menu_main' }],
     ],
@@ -108,8 +139,14 @@ const MENUS = {
     },
   },
   help: {
-    text: '❓ <b>帮助信息</b>\n\n直接发送命令即可使用，例如：\n<code>/weather Beijing</code>\n<code>/chat 你好</code>',
-    buttons: [[{ text: '🔙 返回主菜单', callback_data: 'menu_main' }]],
+    text: '❓ <b>帮助信息</b>\n\n建议优先使用主菜单按钮操作。\n\n常用命令：\n<code>/start</code> 打开主菜单\n<code>/rss</code> 订阅管理\n<code>/stickers</code> 贴纸收藏\n<code>/reminders</code> 提醒列表',
+    buttons: [
+      [
+        { text: '📚 RSS 帮助', callback_data: 'help_rss_add' },
+        { text: '🎨 贴纸帮助', callback_data: 'help_createpack' },
+      ],
+      [{ text: '🔙 返回主菜单', callback_data: 'menu_main' }],
+    ],
   },
 };
 
@@ -125,6 +162,7 @@ const HELP_DETAILS = {
   help_sum: '📝 <b>智能摘要</b>\n\n<code>/sum 链接/文本</code> - 生成摘要\n或回复消息发送 <code>/sum</code>',
   help_remind: '⏰ <b>提醒</b>\n\n<code>/remind 10m 开会</code> - 10分钟后\n<code>/remind 14:00 开会</code> - 指定时间\n<code>/reminders</code> - 查看列表',
   help_note: '📝 <b>备忘录</b>\n\n<code>/note 内容</code> - 添加\n<code>/notes</code> - 列表\n<code>/delnote ID</code> - 删除',
+  help_createpack: '🎨 <b>贴纸包批量创建</b>\n\n<code>/createpack 名称</code> - 从收藏的静态贴纸批量创建贴纸包\n<code>/newpack 名称</code> - 先创建空贴纸包再逐个添加',
   help_rss_add: '📰 <b>添加订阅</b>\n\n<code>/rss add URL</code> - 添加订阅\n<code>/rss del ID</code> - 删除订阅',
   help_rss_list: '📰 <b>查看订阅</b>\n\n<code>/rss list</code> - 查看当前所有订阅',
   help_rss_kw: '📰 <b>关键词管理</b>\n\n<code>/rss kw add 词1,词2</code> - 添加白名单\n<code>/rss ex add 词1,词2</code> - 添加黑名单',
@@ -134,22 +172,27 @@ const HELP_DETAILS = {
 };
 
 function setup(bot, { isAdmin, logger }) {
-  // /start 命令
-  bot.command('start', (ctx) => {
+  const sendMainMenu = (ctx) => {
     const menu = MENUS.main;
-    ctx.reply(menu.text(ctx), {
+    return ctx.reply(menu.text(ctx), {
       parse_mode: 'HTML',
       reply_markup: { inline_keyboard: menu.buttons },
     });
+  };
+
+  // /start 命令
+  bot.command('start', (ctx) => {
+    sendMainMenu(ctx);
+  });
+
+  // /menu 命令（主菜单快捷入口）
+  bot.command('menu', (ctx) => {
+    sendMainMenu(ctx);
   });
 
   // /help 命令
   bot.command('help', (ctx) => {
-    const menu = MENUS.main;
-    ctx.reply(menu.text(ctx), {
-      parse_mode: 'HTML',
-      reply_markup: { inline_keyboard: menu.buttons },
-    });
+    sendMainMenu(ctx);
   });
 
   // 处理菜单点击

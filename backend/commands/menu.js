@@ -5,6 +5,7 @@ function setup(bot, { logger }) {
   // 注册 Bot Commands 菜单
   const commands = [
     { command: 'start', description: '🏠 开始 / 主菜单' },
+    { command: 'menu', description: '🧭 打开功能面板' },
     { command: 'help', description: '❓ 帮助信息' },
     { command: 'rss', description: '📰 RSS 订阅管理' },
     { command: 'chat', description: '💬 AI 对话' },
