@@ -510,25 +510,29 @@ class GitHubMonitor {
 
     if (data.type === 'owner_repo_update') {
       const repoLines = (data.repos || []).slice(0, 6).map((repo, idx) => {
-        const updatedAt = repo.pushedAt ? new Date(repo.pushedAt).toLocaleString('zh-CN') : '未知时间';
-        return `${idx + 1}. <a href="${repo.htmlUrl}">${repo.fullName}</a>\n   🕒 ${updatedAt}`;
+        const updatedAt = repo.pushedAt
+          ? new Date(repo.pushedAt).toLocaleString('zh-CN', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+            }).replace(/\//g, '-')
+          : '未知时间';
+        return `📦 <a href="${repo.htmlUrl}">${repo.fullName}</a>\n   🕒 <i>${updatedAt}</i>`;
       });
 
-      const extraLine = data.updatedCount > 6
-        ? `\n... 以及另外 ${data.updatedCount - 6} 个仓库更新`
-        : '';
+      const extraLine = data.updatedCount > 6 ? `\n<i>... 另外 ${data.updatedCount - 6} 个仓库更新</i>` : '';
 
       return [
-        `📡 <b>账号仓库有更新</b>`,
+        `🐙 <b>GitHub 账号更新</b>`,
+        `👤 <b>${data.owner}</b>  ·  <b>${data.updatedCount}</b> 个仓库`,
         ``,
-        `👤 <b>${data.owner}</b>`,
-        `📦 本轮更新: <b>${data.updatedCount}</b> 个仓库`,
-        ``,
-        `<b>更新仓库：</b>`,
         repoLines.join('\n'),
         extraLine,
         ``,
-        `🔗 <a href="${data.profileUrl}">查看账号主页</a>`,
+        `👀 <a href="${data.profileUrl}">查看主页</a>`,
       ].filter(Boolean).join('\n');
     }
 
