@@ -41,7 +41,10 @@ function generateStickersButtons(stickers, page = 0) {
     buttons.push(navRow);
   }
 
-  buttons.push([{ text: '🔙 返回贴纸菜单', callback_data: 'menu_stickers' }]);
+  buttons.push([
+    { text: '🔙 返回贴纸菜单', callback_data: 'menu_stickers' },
+    { text: '🏠 主菜单', callback_data: 'menu_main' },
+  ]);
 
   return buttons;
 }
@@ -526,7 +529,10 @@ function setup(bot, { logger, settings }) {
     });
 
     buttons.push([{ text: '➕ 创建新贴纸包', callback_data: 'newpack_start' }]);
-    buttons.push([{ text: '🔙 返回贴纸菜单', callback_data: 'menu_stickers' }]);
+    buttons.push([
+      { text: '🔙 返回贴纸菜单', callback_data: 'menu_stickers' },
+      { text: '🏠 主菜单', callback_data: 'menu_main' },
+    ]);
 
     ctx.reply(
       `📦 <b>我的贴纸包</b>\n\n` +
@@ -554,7 +560,10 @@ function setup(bot, { logger, settings }) {
         {
           parse_mode: 'HTML',
           reply_markup: {
-            inline_keyboard: [[{ text: '🔙 返回贴纸菜单', callback_data: 'menu_stickers' }]],
+            inline_keyboard: [[
+              { text: '🔙 返回贴纸菜单', callback_data: 'menu_stickers' },
+              { text: '🏠 主菜单', callback_data: 'menu_main' },
+            ]],
           },
         }
       );
@@ -568,7 +577,10 @@ function setup(bot, { logger, settings }) {
       }];
     });
 
-    buttons.push([{ text: '🔙 返回贴纸菜单', callback_data: 'menu_stickers' }]);
+    buttons.push([
+      { text: '🔙 返回贴纸菜单', callback_data: 'menu_stickers' },
+      { text: '🏠 主菜单', callback_data: 'menu_main' },
+    ]);
 
     await ctx.editMessageText(
       `📦 <b>我的贴纸包</b>\n\n共 ${packs.length} 个\n🖼️ 静态  ✨ 动态  🎬 视频`,
@@ -774,7 +786,10 @@ function setup(bot, { logger, settings }) {
         {
           parse_mode: 'HTML',
           reply_markup: {
-            inline_keyboard: [[{ text: '🔙 返回贴纸菜单', callback_data: 'menu_stickers' }]],
+            inline_keyboard: [[
+              { text: '🔙 返回贴纸菜单', callback_data: 'menu_stickers' },
+              { text: '🏠 主菜单', callback_data: 'menu_main' },
+            ]],
           },
         }
       );

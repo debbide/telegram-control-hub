@@ -31,9 +31,13 @@ function setup(bot, { logger }) {
         {
           parse_mode: 'HTML',
           reply_markup: {
-            inline_keyboard: [[
-              { text: '🧹 清除记忆', callback_data: 'ai_clear_history' }
-            ]]
+            inline_keyboard: [
+              [{ text: '🧹 清除记忆', callback_data: 'ai_clear_history' }],
+              [
+                { text: '🔙 返回 AI 菜单', callback_data: 'menu_ai' },
+                { text: '🏠 主菜单', callback_data: 'menu_main' },
+              ],
+            ]
           }
         }
       );
@@ -44,9 +48,13 @@ function setup(bot, { logger }) {
       activeSessions.delete(userId); // 同时清除活跃状态
       return ctx.reply('✅ 对话历史已清除，连续对话已关闭', {
         reply_markup: {
-          inline_keyboard: [[
-            { text: '💬 开始新对话', callback_data: 'ai_new_chat' }
-          ]]
+          inline_keyboard: [
+            [{ text: '💬 开始新对话', callback_data: 'ai_new_chat' }],
+            [
+              { text: '🔙 返回 AI 菜单', callback_data: 'menu_ai' },
+              { text: '🏠 主菜单', callback_data: 'menu_main' },
+            ],
+          ]
         }
       });
     }
@@ -176,10 +184,16 @@ function setup(bot, { logger }) {
             {
               parse_mode: 'Markdown',
               reply_markup: {
-                inline_keyboard: [[
-                  { text: '🔄 重新生成', callback_data: `ai_regen_${loading.message_id}` },
-                  { text: '🧹 清除记忆', callback_data: 'ai_clear_history' },
-                ]]
+                inline_keyboard: [
+                  [
+                    { text: '🔄 重新生成', callback_data: `ai_regen_${loading.message_id}` },
+                    { text: '🧹 清除记忆', callback_data: 'ai_clear_history' },
+                  ],
+                  [
+                    { text: '🔙 返回 AI 菜单', callback_data: 'menu_ai' },
+                    { text: '🏠 主菜单', callback_data: 'menu_main' },
+                  ],
+                ]
               }
             }
           );
@@ -192,10 +206,16 @@ function setup(bot, { logger }) {
             `🤖 ${fullResponse}`,
             {
               reply_markup: {
-                inline_keyboard: [[
-                  { text: '🔄 重新生成', callback_data: `ai_regen_${loading.message_id}` },
-                  { text: '🧹 清除记忆', callback_data: 'ai_clear_history' },
-                ]]
+                inline_keyboard: [
+                  [
+                    { text: '🔄 重新生成', callback_data: `ai_regen_${loading.message_id}` },
+                    { text: '🧹 清除记忆', callback_data: 'ai_clear_history' },
+                  ],
+                  [
+                    { text: '🔙 返回 AI 菜单', callback_data: 'menu_ai' },
+                    { text: '🏠 主菜单', callback_data: 'menu_main' },
+                  ],
+                ]
               }
             }
           );
@@ -224,9 +244,13 @@ function setup(bot, { logger }) {
     try {
       await ctx.editMessageText('✅ 对话历史已清除，可以开始新对话了', {
         reply_markup: {
-          inline_keyboard: [[
-            { text: '💬 发送 /chat 开始', callback_data: 'ai_noop' }
-          ]]
+          inline_keyboard: [
+            [{ text: '💬 发送 /chat 开始', callback_data: 'ai_noop' }],
+            [
+              { text: '🔙 返回 AI 菜单', callback_data: 'menu_ai' },
+              { text: '🏠 主菜单', callback_data: 'menu_main' },
+            ],
+          ]
         }
       });
     } catch (e) { }
@@ -439,10 +463,16 @@ function setup(bot, { logger }) {
             {
               parse_mode: 'Markdown',
               reply_markup: {
-                inline_keyboard: [[
-                  { text: '🧹 清除记忆', callback_data: 'ai_clear_history' },
-                  { text: '⏹️ 结束对话', callback_data: 'ai_end_session' },
-                ]]
+                inline_keyboard: [
+                  [
+                    { text: '🧹 清除记忆', callback_data: 'ai_clear_history' },
+                    { text: '⏹️ 结束对话', callback_data: 'ai_end_session' },
+                  ],
+                  [
+                    { text: '🔙 返回 AI 菜单', callback_data: 'menu_ai' },
+                    { text: '🏠 主菜单', callback_data: 'menu_main' },
+                  ],
+                ]
               }
             }
           );
@@ -454,10 +484,16 @@ function setup(bot, { logger }) {
             `🤖 ${fullResponse}`,
             {
               reply_markup: {
-                inline_keyboard: [[
-                  { text: '🧹 清除记忆', callback_data: 'ai_clear_history' },
-                  { text: '⏹️ 结束对话', callback_data: 'ai_end_session' },
-                ]]
+                inline_keyboard: [
+                  [
+                    { text: '🧹 清除记忆', callback_data: 'ai_clear_history' },
+                    { text: '⏹️ 结束对话', callback_data: 'ai_end_session' },
+                  ],
+                  [
+                    { text: '🔙 返回 AI 菜单', callback_data: 'menu_ai' },
+                    { text: '🏠 主菜单', callback_data: 'menu_main' },
+                  ],
+                ]
               }
             }
           );

@@ -135,7 +135,8 @@ function setup(bot, { logger }) {
             inline_keyboard: [[
               { text: '📋 查看提醒列表', callback_data: 'reminders_list' }
             ], [
-              { text: '🔙 返回提醒菜单', callback_data: 'menu_reminders' }
+              { text: '🔙 返回提醒菜单', callback_data: 'menu_reminders' },
+              { text: '🏠 主菜单', callback_data: 'menu_main' },
             ]]
           }
         }
@@ -265,7 +266,10 @@ function setup(bot, { logger }) {
         reply_markup: {
           inline_keyboard: [
             [{ text: '➕ 添加提醒', callback_data: 'remind_add_prompt' }],
-            [{ text: '🔙 返回提醒菜单', callback_data: 'menu_reminders' }],
+            [
+              { text: '🔙 返回提醒菜单', callback_data: 'menu_reminders' },
+              { text: '🏠 主菜单', callback_data: 'menu_main' },
+            ],
           ]
         }
       });
@@ -354,7 +358,10 @@ function setup(bot, { logger }) {
         reply_markup: {
           inline_keyboard: [
             [{ text: '➕ 添加提醒', callback_data: 'remind_add_prompt' }],
-            [{ text: '🔙 返回提醒菜单', callback_data: 'menu_reminders' }],
+            [
+              { text: '🔙 返回提醒菜单', callback_data: 'menu_reminders' },
+              { text: '🏠 主菜单', callback_data: 'menu_main' },
+            ],
           ]
         }
       });
@@ -381,7 +388,10 @@ function setup(bot, { logger }) {
       {
         parse_mode: 'HTML',
         reply_markup: {
-          inline_keyboard: [[{ text: '🔙 返回提醒菜单', callback_data: 'menu_reminders' }]],
+          inline_keyboard: [[
+            { text: '🔙 返回提醒菜单', callback_data: 'menu_reminders' },
+            { text: '🏠 主菜单', callback_data: 'menu_main' },
+          ]],
         },
       }
     );

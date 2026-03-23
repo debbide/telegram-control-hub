@@ -93,7 +93,15 @@ function setup(bot, { logger }) {
           '<code>/tr ja 文本</code> - 翻译到日语\n\n' +
           '💡 也可以回复消息发送 <code>/tr</code> 翻译该消息\n\n' +
           '支持语言: 中文/英语/日语/韩语/法语/德语/西班牙语/俄语等',
-          { parse_mode: 'HTML' }
+          {
+            parse_mode: 'HTML',
+            reply_markup: {
+              inline_keyboard: [[
+                { text: '🔙 返回工具菜单', callback_data: 'menu_tools' },
+                { text: '🏠 主菜单', callback_data: 'menu_main' },
+              ]],
+            },
+          }
         );
       }
     } else {
@@ -135,7 +143,11 @@ function setup(bot, { logger }) {
               [
                 { text: '🔄 反向翻译', callback_data: `tr_reverse_${result.targetLang}_${result.sourceLang}` },
                 { text: '📋 复制', callback_data: 'tr_copy' },
-              ]
+              ],
+              [
+                { text: '🔙 返回工具菜单', callback_data: 'menu_tools' },
+                { text: '🏠 主菜单', callback_data: 'menu_main' },
+              ],
             ]
           }
         }

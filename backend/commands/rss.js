@@ -98,7 +98,10 @@ function setup(bot, { scheduler, logger }) {
             reply_markup: {
               inline_keyboard: [
                 [{ text: '➕ 添加订阅', callback_data: 'rss_add_prompt' }],
-                [{ text: '🔙 返回 RSS 菜单', callback_data: 'menu_rss' }],
+                [
+                  { text: '🔙 返回 RSS 菜单', callback_data: 'menu_rss' },
+                  { text: '🏠 主菜单', callback_data: 'menu_main' },
+                ],
               ]
             }
           }
@@ -465,7 +468,10 @@ function setup(bot, { scheduler, logger }) {
           reply_markup: {
             inline_keyboard: [
               [{ text: '➕ 添加订阅', callback_data: 'rss_add_prompt' }],
-              [{ text: '🔙 返回 RSS 菜单', callback_data: 'menu_rss' }],
+              [
+                { text: '🔙 返回 RSS 菜单', callback_data: 'menu_rss' },
+                { text: '🏠 主菜单', callback_data: 'menu_main' },
+              ],
             ]
           }
         });
@@ -491,7 +497,10 @@ function setup(bot, { scheduler, logger }) {
       {
         parse_mode: 'HTML',
         reply_markup: {
-          inline_keyboard: [[{ text: '🔙 返回 RSS 菜单', callback_data: 'menu_rss' }]],
+          inline_keyboard: [[
+            { text: '🔙 返回 RSS 菜单', callback_data: 'menu_rss' },
+            { text: '🏠 主菜单', callback_data: 'menu_main' },
+          ]],
         },
       }
     );
@@ -509,7 +518,10 @@ function setup(bot, { scheduler, logger }) {
       { 
         parse_mode: 'HTML',
         reply_markup: {
-          inline_keyboard: [[{ text: '🔙 返回', callback_data: `rss_detail_${id}` }]]
+          inline_keyboard: [[
+            { text: '🔙 返回', callback_data: `rss_detail_${id}` },
+            { text: '🏠 主菜单', callback_data: 'menu_main' },
+          ]]
         }
       }
     );
@@ -534,7 +546,10 @@ function setup(bot, { scheduler, logger }) {
       { 
         parse_mode: 'HTML',
         reply_markup: {
-          inline_keyboard: [[{ text: '🔙 返回', callback_data: `rss_detail_${id}` }]]
+          inline_keyboard: [[
+            { text: '🔙 返回', callback_data: `rss_detail_${id}` },
+            { text: '🏠 主菜单', callback_data: 'menu_main' },
+          ]]
         }
       }
     );
