@@ -109,11 +109,29 @@ app.get('/api/settings', (req, res) => {
   });
 });
 
+function mergeSettingsWithSecretProtection(currentSettings, incomingSettings) {
+  const merged = { ...currentSettings, ...incomingSettings };
+  const maskedValue = '***已配置***';
+
+  const keepIfMaskedOrEmpty = (key) => {
+    if (!Object.prototype.hasOwnProperty.call(incomingSettings, key)) return;
+    const value = incomingSettings[key];
+    if (value === maskedValue || value === '') {
+      merged[key] = currentSettings[key] || '';
+    }
+  };
+
+  keepIfMaskedOrEmpty('botToken');
+  keepIfMaskedOrEmpty('openaiKey');
+
+  return merged;
+}
+
 // 更新设置
 app.post('/api/settings', async (req, res) => {
   try {
     const currentSettings = loadSettings();
-    const newSettings = { ...currentSettings, ...req.body };
+    const newSettings = mergeSettingsWithSecretProtection(currentSettings, req.body || {});
     saveSettings(newSettings);
     res.json({ success: true });
   } catch (error) {
