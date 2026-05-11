@@ -168,6 +168,14 @@ function mergeSettingsWithSecretProtection(currentSettings, incomingSettings) {
   keepIfMaskedOrEmpty('botToken');
   keepIfMaskedOrEmpty('openaiKey');
 
+  if (incomingSettings.webdav && typeof incomingSettings.webdav === 'object') {
+    merged.webdav = { ...(currentSettings.webdav || {}), ...incomingSettings.webdav };
+    const incomingPassword = incomingSettings.webdav.password;
+    if (incomingPassword === maskedValue || incomingPassword === '') {
+      merged.webdav.password = currentSettings.webdav?.password || '';
+    }
+  }
+
   return merged;
 }
 

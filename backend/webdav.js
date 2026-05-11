@@ -10,8 +10,9 @@ const { URL } = require('url');
 /**
  * WebDAV 请求封装
  */
-async function webdavRequest(config, method, remotePath, body = null) {
+async function webdavRequest(config, method, remotePath, body = null, timeoutOverride = null) {
     const { url, username, password, timeout = 120000 } = config;
+    const requestTimeout = timeoutOverride || timeout;
     const baseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
     const fullUrl = `${baseUrl}${remotePath}`;
 
@@ -50,9 +51,8 @@ async function webdavRequest(config, method, remotePath, body = null) {
         });
 
         req.on('error', reject);
-        req.setTimeout(timeout, () => {
-            req.destroy();
-            reject(new Error(`请求超时（${Math.round(timeout / 1000)} 秒）`));
+        req.setTimeout(requestTimeout, () => {
+            req.destroy(new Error(`${method} ${remotePath} 请求超时（${Math.round(requestTimeout / 1000)} 秒）`));
         });
 
         if (body) {
@@ -67,7 +67,7 @@ async function webdavRequest(config, method, remotePath, body = null) {
  */
 async function testConnection(config) {
     try {
-        const result = await webdavRequest(config, 'PROPFIND', '/');
+        const result = await webdavRequest(config, 'PROPFIND', '/', null, 30000);
 
         if (result.status === 401) {
             return { success: false, error: '认证失败，请检查用户名和密码' };
@@ -97,20 +97,17 @@ async function testConnection(config) {
 async function ensureDir(config, remotePath) {
     if (!remotePath || remotePath === '/') return true;
 
-    // 分解路径，逐级创建
+    const existing = await webdavRequest(config, 'PROPFIND', remotePath, null, 30000);
+    if (existing.ok || existing.status === 207) return true;
+
     const parts = remotePath.split('/').filter(p => p);
     let currentPath = '';
 
     for (const part of parts) {
         currentPath += '/' + part;
-        try {
-            const result = await webdavRequest(config, 'MKCOL', currentPath);
-            // 201 = 创建成功, 405 = 已存在, 409 = 父目录不存在（继续尝试）
-            if (result.status !== 201 && result.status !== 405 && result.status !== 409) {
-                // 可能已存在，忽略
-            }
-        } catch (e) {
-            // 忽略错误，继续创建下一级
+        const result = await webdavRequest(config, 'MKCOL', currentPath, null, 30000);
+        if (result.status !== 201 && result.status !== 405) {
+            return { success: false, error: `创建目录失败: ${currentPath} HTTP ${result.status}` };
         }
     }
     return true;
@@ -125,7 +122,8 @@ async function uploadFile(config, remotePath, content) {
         const lastSlash = remotePath.lastIndexOf('/');
         if (lastSlash > 0) {
             const dir = remotePath.substring(0, lastSlash);
-            await ensureDir(config, dir);
+            const dirResult = await ensureDir(config, dir);
+            if (dirResult !== true) return dirResult;
         }
 
         const result = await webdavRequest(config, 'PUT', remotePath, content);
