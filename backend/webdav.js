@@ -11,7 +11,7 @@ const { URL } = require('url');
  * WebDAV 请求封装
  */
 async function webdavRequest(config, method, remotePath, body = null) {
-    const { url, username, password } = config;
+    const { url, username, password, timeout = 120000 } = config;
     const baseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
     const fullUrl = `${baseUrl}${remotePath}`;
 
@@ -50,9 +50,9 @@ async function webdavRequest(config, method, remotePath, body = null) {
         });
 
         req.on('error', reject);
-        req.setTimeout(30000, () => {
+        req.setTimeout(timeout, () => {
             req.destroy();
-            reject(new Error('请求超时'));
+            reject(new Error(`请求超时（${Math.round(timeout / 1000)} 秒）`));
         });
 
         if (body) {
@@ -67,16 +67,25 @@ async function webdavRequest(config, method, remotePath, body = null) {
  */
 async function testConnection(config) {
     try {
-        // 使用 PROPFIND 测试连接
         const result = await webdavRequest(config, 'PROPFIND', '/');
 
-        if (result.ok || result.status === 207) {
-            return { success: true, message: '连接成功' };
-        } else if (result.status === 401) {
+        if (result.status === 401) {
             return { success: false, error: '认证失败，请检查用户名和密码' };
-        } else {
+        }
+        if (!result.ok && result.status !== 207) {
             return { success: false, error: `连接失败: HTTP ${result.status}` };
         }
+
+        const remotePath = config.remotePath || '/tgbot-backup';
+        const testPath = `${remotePath}/connection_test_${Date.now()}.txt`;
+        const uploadResult = await uploadFile(config, testPath, 'webdav connection test');
+
+        if (!uploadResult.success) {
+            return { success: false, error: `连接成功，但备份目录写入失败: ${uploadResult.error}` };
+        }
+
+        await deleteFile(config, testPath);
+        return { success: true, message: '连接成功，备份目录可写' };
     } catch (error) {
         return { success: false, error: error.message };
     }
