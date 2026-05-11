@@ -26,6 +26,8 @@ interface ParsedFeed {
   items: FeedItem[];
 }
 
+type FeedLink = string | { href?: string };
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -98,7 +100,7 @@ serve(async (req) => {
       }
     }
 
-    const feedLink = feed.links?.[0] as any;
+    const feedLink = feed.links?.[0] as FeedLink | undefined;
     const parsedFeed: ParsedFeed = {
       title: feed.title?.value || 'Unknown Feed',
       description: feed.description || '',

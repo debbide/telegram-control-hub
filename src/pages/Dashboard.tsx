@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { statsApi, DashboardStats } from "@/lib/api/backend";
+import { useRealtime } from "@/hooks/useRealtime";
 import {
   AreaChart,
   Area,
@@ -113,10 +114,19 @@ const DashboardSkeleton = () => (
 const Dashboard = () => {
   const [stats, setStats] = useState<DashboardStats>(defaultStats);
   const [isLoading, setIsLoading] = useState(true);
+  const { addMessageHandler } = useRealtime();
 
   useEffect(() => {
     loadStats();
   }, []);
+
+  useEffect(() => {
+    return addMessageHandler(message => {
+      if (["status", "task_update", "notification"].includes(message.type)) {
+        loadStats();
+      }
+    });
+  }, [addMessageHandler]);
 
   const loadStats = async () => {
     setIsLoading(true);
@@ -293,27 +303,10 @@ const Dashboard = () => {
                   />
                   <Area
                     type="monotone"
-                    dataKey="chat"
-                    stackId="1"
+                    dataKey="total"
                     stroke="hsl(var(--primary))"
                     fill="hsl(var(--primary) / 0.3)"
-                    name="AI 对话"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="rss"
-                    stackId="1"
-                    stroke="#f97316"
-                    fill="rgba(249, 115, 22, 0.3)"
-                    name="RSS"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="tools"
-                    stackId="1"
-                    stroke="#8b5cf6"
-                    fill="rgba(139, 92, 246, 0.3)"
-                    name="工具"
+                    name="调用次数"
                   />
                 </AreaChart>
               </ResponsiveContainer>

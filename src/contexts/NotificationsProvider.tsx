@@ -1,21 +1,19 @@
-import { useState, useEffect, useCallback } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { notificationsApi, Notification } from "@/lib/api/backend";
-import { useWebSocket, WebSocketMessage } from "./useWebSocket";
+import { NotificationsContext } from "@/contexts/NotificationsContext";
+import { useRealtime } from "@/hooks/useRealtime";
+import { WebSocketMessage } from "@/hooks/useWebSocket";
 import { toast } from "sonner";
 
-export function useNotifications() {
+export function NotificationsProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { isConnected, addMessageHandler } = useRealtime();
 
-  // 处理 WebSocket 消息
   const handleWebSocketMessage = useCallback((message: WebSocketMessage) => {
     if (message.type === 'notification') {
       const newNotification = message.data as Notification;
-
-      // 添加新通知到列表顶部
-      setNotifications(prev => [newNotification, ...prev]);
-
-      // 显示 toast 通知
+      setNotifications(prev => [newNotification, ...prev.filter(item => item.id !== newNotification.id)]);
       toast(newNotification.title, {
         description: newNotification.message,
         icon: getNotificationIcon(newNotification.type),
@@ -23,19 +21,10 @@ export function useNotifications() {
     }
   }, []);
 
-  // 连接 WebSocket（当后端实现 WebSocket 时启用）
-  const { isConnected } = useWebSocket({
-    onMessage: handleWebSocketMessage,
-    onConnect: () => {
-      console.log('[Notifications] WebSocket connected');
-    },
-    onDisconnect: () => {
-      console.log('[Notifications] WebSocket disconnected');
-    },
-    autoReconnect: false, // 禁用自动重连，避免后端未实现 WebSocket 时持续报错
-  });
+  useEffect(() => {
+    return addMessageHandler(handleWebSocketMessage);
+  }, [addMessageHandler, handleWebSocketMessage]);
 
-  // 加载通知列表
   const loadNotifications = useCallback(async () => {
     setIsLoading(true);
     const result = await notificationsApi.list();
@@ -49,7 +38,6 @@ export function useNotifications() {
     loadNotifications();
   }, [loadNotifications]);
 
-  // 标记已读
   const markAsRead = useCallback(async (id: string) => {
     const result = await notificationsApi.markAsRead(id);
     if (result.success) {
@@ -60,7 +48,6 @@ export function useNotifications() {
     return result.success;
   }, []);
 
-  // 全部已读
   const markAllRead = useCallback(async () => {
     const result = await notificationsApi.markAllRead();
     if (result.success) {
@@ -72,7 +59,6 @@ export function useNotifications() {
     return result.success;
   }, []);
 
-  // 删除通知
   const deleteNotification = useCallback(async (id: string) => {
     const result = await notificationsApi.delete(id);
     if (result.success) {
@@ -84,7 +70,6 @@ export function useNotifications() {
     return result.success;
   }, []);
 
-  // 清空通知
   const clearAll = useCallback(async () => {
     const result = await notificationsApi.clear();
     if (result.success) {
@@ -98,7 +83,7 @@ export function useNotifications() {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  return {
+  const value = useMemo(() => ({
     notifications,
     isLoading,
     isConnected,
@@ -108,10 +93,15 @@ export function useNotifications() {
     markAllRead,
     deleteNotification,
     clearAll,
-  };
+  }), [notifications, isLoading, isConnected, unreadCount, loadNotifications, markAsRead, markAllRead, deleteNotification, clearAll]);
+
+  return (
+    <NotificationsContext.Provider value={value}>
+      {children}
+    </NotificationsContext.Provider>
+  );
 }
 
-// 根据通知类型获取图标
 function getNotificationIcon(type: Notification["type"]): string {
   switch (type) {
     case "reminder": return "⏰";

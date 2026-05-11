@@ -913,7 +913,7 @@ const RSSPage = () => {
                             <h4 className="font-medium line-clamp-2">{article.title}</h4>
                             <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{article.description}</p>
                             <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                              <span>{(article as any).source || "未知来源"}</span>
+                              <span>{article.source || "未知来源"}</span>
                               <span>{new Date(article.pubDate).toLocaleString("zh-CN")}</span>
                               {article.categories && article.categories.length > 0 && (
                                 <div className="flex gap-1">

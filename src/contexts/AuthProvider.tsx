@@ -1,15 +1,11 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { authApi, AuthUser } from "@/lib/api/backend";
+import { AuthContext } from "@/contexts/AuthContext";
 
-interface AuthContextType {
-  user: AuthUser | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<boolean>;
-  logout: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+type DirectVerifyResponse = {
+  valid?: boolean;
+  user?: AuthUser;
+};
 
 const AUTH_TOKEN_KEY = "bot_admin_token";
 
@@ -29,11 +25,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const result = await authApi.verify();
-    // 后端直接返回 { valid: true, user } 格式
-    if ((result as any).valid && (result as any).user) {
-      setUser((result as any).user);
+    const directResult = result as DirectVerifyResponse;
+    if (directResult.valid && directResult.user) {
+      setUser(directResult.user);
     } else if (result.success && result.data?.valid && result.data.user) {
-      // 兼容包装格式
       setUser(result.data.user);
     } else {
       localStorage.removeItem(AUTH_TOKEN_KEY);
@@ -70,12 +65,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
 }

@@ -3,8 +3,10 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { EventEmitter } = require('events');
 
 const DATA_PATH = process.env.DATA_PATH || './data';
+const events = new EventEmitter();
 
 // 确保数据目录存在
 function ensureDataDir() {
@@ -52,24 +54,83 @@ function getLogs() {
 
 function addLog(level, message, source = 'system') {
     const logs = getLogs();
-    logs.push({
+    const log = {
         id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         level,
         message,
         source,
         timestamp: new Date().toISOString(),
-    });
+    };
+    logs.push(log);
     // 保留最近 MAX_LOGS 条
     while (logs.length > MAX_LOGS) {
         logs.shift();
     }
     logsCache = logs;
     saveData('logs.json', logs);
+    events.emit('log:add', log);
+    return log;
 }
 
 function clearLogs() {
     logsCache = [];
     saveData('logs.json', []);
+    events.emit('log:clear');
+}
+
+// ==================== 通知存储 ====================
+
+const MAX_NOTIFICATIONS = 500;
+
+function getNotifications() {
+    return loadData('notifications.json', []);
+}
+
+function saveNotifications(notifications) {
+    saveData('notifications.json', notifications.slice(0, MAX_NOTIFICATIONS));
+}
+
+function addNotification(notification) {
+    const notifications = getNotifications();
+    const item = {
+        id: notification.id || `notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        type: notification.type || 'system',
+        title: notification.title || '系统通知',
+        message: notification.message || '',
+        timestamp: notification.timestamp || new Date().toISOString(),
+        read: notification.read === true,
+    };
+    notifications.unshift(item);
+    saveNotifications(notifications);
+    events.emit('notification:add', item);
+    return item;
+}
+
+function markNotificationRead(id) {
+    const notifications = getNotifications();
+    const item = notifications.find(n => n.id === id);
+    if (!item) return null;
+    item.read = true;
+    saveNotifications(notifications);
+    return item;
+}
+
+function markAllNotificationsRead() {
+    const notifications = getNotifications().map(n => ({ ...n, read: true }));
+    saveNotifications(notifications);
+    return notifications;
+}
+
+function deleteNotification(id) {
+    const notifications = getNotifications();
+    const filtered = notifications.filter(n => n.id !== id);
+    if (filtered.length === notifications.length) return false;
+    saveNotifications(filtered);
+    return true;
+}
+
+function clearNotifications() {
+    saveNotifications([]);
 }
 
 // ==================== 笔记存储 ====================
@@ -576,10 +637,18 @@ function deleteUserStickerPack(userId, packName) {
 }
 
 module.exports = {
+    events,
     // 日志
     getLogs,
     addLog,
     clearLogs,
+    // 通知
+    getNotifications,
+    addNotification,
+    markNotificationRead,
+    markAllNotificationsRead,
+    deleteNotification,
+    clearNotifications,
     // 笔记
     getNotes,
     addNote,

@@ -89,7 +89,7 @@ const GitHubMonitorPage = () => {
   };
 
   const handleSearch = async () => {
-    const match = repoInput.match(/(?:github\.com\/)?([^\/]+)\/([^\/\s]+)/);
+    const match = repoInput.match(/(?:github\.com\/)?([^/]+)\/([^/\s]+)/);
     if (!match) {
       toast.error("请输入正确的仓库格式：owner/repo");
       return;

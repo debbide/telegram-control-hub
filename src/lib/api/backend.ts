@@ -24,6 +24,7 @@ interface ApiResponse<T> {
   success: boolean;
   data?: T;
   error?: string;
+  message?: string;
 }
 
 async function request<T>(
@@ -99,6 +100,14 @@ export interface BotSettings {
   };
   github?: {
     checkInterval?: number;
+  };
+  webdav?: {
+    url?: string;
+    username?: string;
+    password?: string;
+    remotePath?: string;
+    autoBackup?: boolean;
+    autoBackupInterval?: number;
   };
 }
 
@@ -282,6 +291,7 @@ export interface ParseResult {
     link: string;
     description?: string;
     pubDate: string;
+    source?: string;
   }>;
   error?: string;
 }
@@ -383,9 +393,10 @@ export interface DashboardStats {
   }>;
   commandTrend?: Array<{
     date: string;
-    chat: number;
-    rss: number;
-    tools: number;
+    total?: number;
+    chat?: number;
+    rss?: number;
+    tools?: number;
   }>;
   recentActivity?: Array<{
     id: string;
@@ -576,8 +587,14 @@ export interface ScheduledTask {
   interval: string;
   lastRun: string | null;
   nextRun: string | null;
-  status: 'active' | 'paused' | 'error';
+  status: 'active' | 'paused' | 'running' | 'error';
   error: string | null;
+  lastDurationMs?: number | null;
+  lastSuccessAt?: string | null;
+  lastErrorAt?: string | null;
+  runCount?: number;
+  successCount?: number;
+  failureCount?: number;
 }
 
 export const scheduledTasksApi = {
@@ -1027,7 +1044,15 @@ export const stickerPacksApi = {
 
 export function getWebSocketUrl(): string {
   const backendUrl = getBackendUrl();
-  return backendUrl.replace(/^http/, 'ws') + '/ws';
+  const token = localStorage.getItem('bot_admin_token');
+  const query = token ? `?token=${encodeURIComponent(token)}` : '';
+
+  if (!backendUrl) {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${protocol}//${window.location.host}/ws${query}`;
+  }
+
+  return `${backendUrl.replace(/^http/, 'ws')}/ws${query}`;
 }
 
 export default {

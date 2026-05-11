@@ -400,8 +400,8 @@ const SettingsPage = () => {
             <div className="space-y-2">
               <Label>WebDAV 地址</Label>
               <Input
-                value={(config as any).webdav?.url || ""}
-                onChange={(e) => setConfig({ ...config, webdav: { ...(config as any).webdav, url: e.target.value } } as any)}
+                value={config.webdav?.url || ""}
+                onChange={(e) => setConfig({ ...config, webdav: { ...config.webdav, url: e.target.value } })}
                 placeholder="https://dav.jianguoyun.com/dav/"
               />
             </div>
@@ -409,8 +409,8 @@ const SettingsPage = () => {
               <div className="space-y-2">
                 <Label>用户名</Label>
                 <Input
-                  value={(config as any).webdav?.username || ""}
-                  onChange={(e) => setConfig({ ...config, webdav: { ...(config as any).webdav, username: e.target.value } } as any)}
+                  value={config.webdav?.username || ""}
+                  onChange={(e) => setConfig({ ...config, webdav: { ...config.webdav, username: e.target.value } })}
                   placeholder="邮箱或用户名"
                 />
               </div>
@@ -418,8 +418,8 @@ const SettingsPage = () => {
                 <Label>密码/应用密码</Label>
                 <Input
                   type="password"
-                  value={(config as any).webdav?.password || ""}
-                  onChange={(e) => setConfig({ ...config, webdav: { ...(config as any).webdav, password: e.target.value } } as any)}
+                  value={config.webdav?.password || ""}
+                  onChange={(e) => setConfig({ ...config, webdav: { ...config.webdav, password: e.target.value } })}
                   placeholder="应用密码"
                 />
               </div>
@@ -427,8 +427,8 @@ const SettingsPage = () => {
             <div className="space-y-2">
               <Label>远程路径</Label>
               <Input
-                value={(config as any).webdav?.remotePath || "/tgbot-backup"}
-                onChange={(e) => setConfig({ ...config, webdav: { ...(config as any).webdav, remotePath: e.target.value } } as any)}
+                value={config.webdav?.remotePath || "/tgbot-backup"}
+                onChange={(e) => setConfig({ ...config, webdav: { ...config.webdav, remotePath: e.target.value } })}
                 placeholder="/tgbot-backup"
               />
             </div>
@@ -438,8 +438,8 @@ const SettingsPage = () => {
                 <p className="text-xs text-muted-foreground">每 24 小时自动备份，保留 3 天</p>
               </div>
               <Switch
-                checked={(config as any).webdav?.autoBackup || false}
-                onCheckedChange={(checked) => setConfig({ ...config, webdav: { ...(config as any).webdav, autoBackup: checked } } as any)}
+                checked={config.webdav?.autoBackup || false}
+                onCheckedChange={(checked) => setConfig({ ...config, webdav: { ...config.webdav, autoBackup: checked } })}
               />
             </div>
             <div className="flex gap-2 pt-2">

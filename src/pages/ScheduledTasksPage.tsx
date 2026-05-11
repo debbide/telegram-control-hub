@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { scheduledTasksApi, ScheduledTask } from "@/lib/api/backend";
+import { useRealtime } from "@/hooks/useRealtime";
 import {
   Clock,
   RefreshCw,
@@ -23,6 +24,7 @@ import { toast } from "sonner";
 const ScheduledTasksPage = () => {
   const [tasks, setTasks] = useState<ScheduledTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { isConnected, addMessageHandler } = useRealtime();
 
   useEffect(() => {
     loadTasks();
@@ -30,6 +32,21 @@ const ScheduledTasksPage = () => {
     const interval = setInterval(loadTasks, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    return addMessageHandler(message => {
+      if (message.type !== "task_update") return;
+      const task = message.data as ScheduledTask & { removed?: boolean };
+      setTasks(prev => {
+        if (task.removed) {
+          return prev.filter(item => item.id !== task.id);
+        }
+        const exists = prev.some(item => item.id === task.id);
+        if (!exists) return [task, ...prev];
+        return prev.map(item => item.id === task.id ? { ...item, ...task } : item);
+      });
+    });
+  }, [addMessageHandler]);
 
   const loadTasks = async () => {
     const result = await scheduledTasksApi.list();
@@ -60,6 +77,13 @@ const ScheduledTasksPage = () => {
 
   const getStatusBadge = (status: ScheduledTask["status"]) => {
     switch (status) {
+      case "running":
+        return (
+          <Badge variant="default" className="bg-blue-500/20 text-blue-600 border-blue-500/30">
+            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+            执行中
+          </Badge>
+        );
       case "active":
         return (
           <Badge variant="default" className="bg-green-500/20 text-green-600 border-green-500/30">
@@ -179,6 +203,9 @@ const ScheduledTasksPage = () => {
             <span className="text-2xl">⏰</span> 定时任务
           </h1>
           <p className="text-muted-foreground mt-1">查看和管理后台定时任务</p>
+          <Badge variant={isConnected ? "default" : "secondary"} className="mt-2">
+            {isConnected ? "实时连接" : "轮询模式"}
+          </Badge>
         </div>
         <Button variant="outline" onClick={handleRefresh} disabled={isLoading} className="gap-2">
           {isLoading ? (

@@ -6,10 +6,11 @@ const path = require('path');
 const storage = require('./storage');
 
 class RssScheduler {
-  constructor(parseRssFeed, logger, onNewItems) {
+  constructor(parseRssFeed, logger, onNewItems, taskRegistry = null) {
     this.parseRssFeed = parseRssFeed;
     this.logger = logger;
     this.onNewItems = onNewItems;
+    this.taskRegistry = taskRegistry;
     this.timers = new Map(); // feedId -> timer
     this.seenItems = new Map(); // feedId -> Set of item ids
     this.dataPath = process.env.DATA_PATH || './data';
@@ -183,6 +184,16 @@ class RssScheduler {
     const subId = subscription.id;
 
     this.logger.info(`⏰ 调度订阅 [${subscription.title}] 每 ${subscription.interval} 分钟检查一次`);
+    this.taskRegistry?.upsertTask(`rss_${subId}`, {
+      type: 'rss',
+      name: `RSS: ${subscription.title}`,
+      description: `检查订阅 "${subscription.title}"`,
+      interval: `${subscription.interval} 分钟`,
+      status: subscription.lastError ? 'error' : 'active',
+      error: subscription.lastError || null,
+      lastRun: subscription.lastCheck || null,
+      nextRun: new Date(Date.now() + intervalMs).toISOString(),
+    });
 
     // 立即执行一次（使用最新配置）
     this.checkFeedById(subId);
@@ -221,6 +232,7 @@ class RssScheduler {
       clearInterval(timer);
       this.timers.delete(id);
     }
+    this.taskRegistry?.removeTask(`rss_${id}`);
   }
 
   /**
@@ -228,12 +240,27 @@ class RssScheduler {
    */
   async checkFeed(subscription) {
     this.logger.info(`🔄 检查订阅: ${subscription.title} (${subscription.url})`);
+    const startedAt = new Date().toISOString();
+    const taskId = `rss_${subscription.id}`;
+    const intervalMs = (subscription.interval || 30) * 60 * 1000;
+    const nextRun = () => new Date(Date.now() + intervalMs).toISOString();
+    this.taskRegistry?.markRunStart(taskId, {
+      type: 'rss',
+      name: `RSS: ${subscription.title}`,
+      description: `检查订阅 "${subscription.title}"`,
+      interval: `${subscription.interval} 分钟`,
+      nextRun: nextRun(),
+    });
 
     try {
       const result = await this.parseRssFeed(subscription.url);
 
       if (!result.success) {
         this.updateSubscriptionStatus(subscription.id, null, result.error);
+        this.taskRegistry?.markRunError(taskId, result.error || 'RSS 解析失败', {
+          startedAt,
+          nextRun: nextRun(),
+        });
         return;
       }
 
@@ -294,10 +321,18 @@ class RssScheduler {
       }
 
       this.updateSubscriptionStatus(subscription.id, new Date().toISOString(), null);
+      this.taskRegistry?.markRunSuccess(taskId, {
+        startedAt,
+        nextRun: nextRun(),
+      });
     } catch (error) {
       this.logger.error(`❌ 检查订阅失败 [${subscription.title}]: ${error.message}`);
       storage.addLog('error', `[${subscription.title}] 检查失败: ${error.message}`, 'rss');
       this.updateSubscriptionStatus(subscription.id, null, error.message);
+      this.taskRegistry?.markRunError(taskId, error, {
+        startedAt,
+        nextRun: nextRun(),
+      });
     }
   }
 

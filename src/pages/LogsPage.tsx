@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { logsApi, LogEntry } from "@/lib/api/backend";
+import { useRealtime } from "@/hooks/useRealtime";
 import { 
   ScrollText, 
   Search, 
@@ -25,11 +26,25 @@ const LogsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [levelFilter, setLevelFilter] = useState<string>("all");
+  const { isConnected, addMessageHandler } = useRealtime();
 
   // 加载日志
   useEffect(() => {
     loadLogs();
   }, []);
+
+  useEffect(() => {
+    return addMessageHandler(message => {
+      if (message.type !== "log") return;
+      const log = message.data as Partial<LogEntry> & { cleared?: boolean };
+      if (log.cleared) {
+        setLogs([]);
+        return;
+      }
+      if (!log.id || !log.level || !log.message || !log.timestamp || !log.source) return;
+      setLogs(prev => [log as LogEntry, ...prev.filter(item => item.id !== log.id)].slice(0, 500));
+    });
+  }, [addMessageHandler]);
 
   const loadLogs = async () => {
     setIsLoading(true);
@@ -113,6 +128,9 @@ const LogsPage = () => {
             <span className="text-2xl">📜</span> 实时日志
           </h1>
           <p className="text-muted-foreground mt-1">查看 Bot 运行日志</p>
+          <Badge variant={isConnected ? "default" : "secondary"} className="mt-2">
+            {isConnected ? "实时连接" : "离线模式"}
+          </Badge>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2">

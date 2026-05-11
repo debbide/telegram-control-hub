@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { getWebSocketUrl } from "@/lib/api/backend";
 
 export type WebSocketMessage = {
-  type: 'notification' | 'log' | 'status' | 'rss_update';
-  data: any;
+  type: 'notification' | 'log' | 'status' | 'rss_update' | 'task_update';
+  data: unknown;
 };
 
 interface UseWebSocketOptions {

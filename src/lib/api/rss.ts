@@ -9,6 +9,7 @@ export interface FeedItem {
   author?: string;
   categories?: string[];
   content?: string;
+  source?: string;
 }
 
 export interface ParsedFeed {
