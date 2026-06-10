@@ -12,6 +12,10 @@ function mergeTaskState(task, taskRegistry) {
   };
 }
 
+function hasCompleteAutoBackupConfig(config = {}) {
+  return !!(config.autoBackup && config.url && config.username && config.password);
+}
+
 function registerScheduledTasksRoutes(app, { loadSettings, getScheduler, getCurrentBot, taskRegistry }) {
   app.get('/api/scheduled-tasks', (req, res) => {
     const settings = loadSettings();
@@ -51,7 +55,7 @@ function registerScheduledTasksRoutes(app, { loadSettings, getScheduler, getCurr
     });
 
     const webdavConfig = settings.webdav || {};
-    if (webdavConfig.autoBackup && webdavConfig.url) {
+    if (hasCompleteAutoBackupConfig(webdavConfig)) {
       tasks.push({
         id: 'webdav_backup',
         type: 'backup',

@@ -180,10 +180,28 @@ function mergeSettingsWithSecretProtection(currentSettings, incomingSettings) {
 }
 
 // 更新设置
+function getWebdavSchedulerConfig(settings) {
+  const config = settings.webdav || {};
+  return {
+    autoBackup: !!config.autoBackup,
+    url: config.url || '',
+    username: config.username || '',
+    password: config.password || '',
+    remotePath: config.remotePath || '/tgbot-backup',
+    autoBackupInterval: Number(config.autoBackupInterval || 24),
+  };
+}
+
+function hasWebdavSchedulerConfigChanged(previousSettings, nextSettings) {
+  return JSON.stringify(getWebdavSchedulerConfig(previousSettings)) !==
+    JSON.stringify(getWebdavSchedulerConfig(nextSettings));
+}
+
 app.post('/api/settings', async (req, res) => {
   try {
     const currentSettings = loadSettings();
     const newSettings = mergeSettingsWithSecretProtection(currentSettings, req.body || {});
+    const webdavSchedulerChanged = hasWebdavSchedulerConfigChanged(currentSettings, newSettings);
     saveSettings(newSettings);
     broadcastStatus({ configured: !!newSettings.botToken });
 
@@ -191,6 +209,10 @@ app.post('/api/settings', async (req, res) => {
     if (githubMonitor) {
       const appliedMinutes = githubMonitor.updateCheckIntervalFromSettings(newSettings);
       githubMonitor.updateCheckInterval(appliedMinutes);
+    }
+
+    if (webdavSchedulerChanged) {
+      backupRoutes?.startBackupScheduler();
     }
 
     res.json({ success: true });

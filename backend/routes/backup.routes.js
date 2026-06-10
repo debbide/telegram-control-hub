@@ -6,6 +6,10 @@ function registerBackupRoutes(app, { loadSettings, saveSettings, getScheduler, l
   let backupTimer = null;
   let initialBackupTimer = null;
 
+  function hasCompleteAutoBackupConfig(config = {}) {
+    return !!(config.autoBackup && config.url && config.username && config.password);
+  }
+
   function createBackupData(settings) {
     return {
       timestamp: new Date().toISOString(),
@@ -60,7 +64,7 @@ function registerBackupRoutes(app, { loadSettings, saveSettings, getScheduler, l
     const settings = loadSettings();
     const config = settings.webdav || {};
 
-    if (!config.autoBackup || !config.url || !config.username || !config.password) {
+    if (!hasCompleteAutoBackupConfig(config)) {
       return;
     }
 
@@ -134,7 +138,7 @@ function registerBackupRoutes(app, { loadSettings, saveSettings, getScheduler, l
     const settings = loadSettings();
     const config = settings.webdav || {};
 
-    if (config.autoBackup && config.url) {
+    if (hasCompleteAutoBackupConfig(config)) {
       const intervalMs = (config.autoBackupInterval || 24) * 60 * 60 * 1000;
       logger.info(`📅 启动定时备份，间隔: ${config.autoBackupInterval || 24} 小时`);
       taskRegistry?.upsertTask(TASK_ID, {
