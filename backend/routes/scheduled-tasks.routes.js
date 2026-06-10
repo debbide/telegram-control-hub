@@ -16,6 +16,21 @@ function hasCompleteAutoBackupConfig(config = {}) {
   return !!(config.autoBackup && config.url && config.username && config.password);
 }
 
+function normalizeBackupTime(value) {
+  if (typeof value !== 'string') return '03:00';
+  return /^([01]\d|2[0-3]):([0-5]\d)$/.test(value) ? value : '03:00';
+}
+
+function getNextScheduledBackupDate(config = {}, from = new Date()) {
+  const [hours, minutes] = normalizeBackupTime(config.autoBackupTime).split(':').map(Number);
+  const nextRun = new Date(from);
+  nextRun.setHours(hours, minutes, 0, 0);
+  if (nextRun <= from) {
+    nextRun.setDate(nextRun.getDate() + 1);
+  }
+  return nextRun;
+}
+
 function registerScheduledTasksRoutes(app, { loadSettings, getScheduler, getCurrentBot, taskRegistry }) {
   app.get('/api/scheduled-tasks', (req, res) => {
     const settings = loadSettings();
@@ -61,9 +76,9 @@ function registerScheduledTasksRoutes(app, { loadSettings, getScheduler, getCurr
         type: 'backup',
         name: 'WebDAV 自动备份',
         description: '备份数据到 WebDAV 服务器',
-        interval: `${webdavConfig.autoBackupInterval || 24} 小时`,
+        interval: `每天 ${normalizeBackupTime(webdavConfig.autoBackupTime)}`,
         lastRun: null,
-        nextRun: null,
+        nextRun: getNextScheduledBackupDate(webdavConfig).toISOString(),
         status: 'active',
         error: null,
       });

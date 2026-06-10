@@ -67,6 +67,11 @@ const SettingsPage = () => {
     github: {
       checkInterval: 10,
     },
+    webdav: {
+      remotePath: "/tgbot-backup",
+      autoBackup: false,
+      autoBackupTime: "03:00",
+    },
   });
 
   // 加载设置
@@ -440,6 +445,14 @@ const SettingsPage = () => {
               <Switch
                 checked={config.webdav?.autoBackup || false}
                 onCheckedChange={(checked) => setConfig({ ...config, webdav: { ...config.webdav, autoBackup: checked } })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>备份时间</Label>
+              <Input
+                type="time"
+                value={config.webdav?.autoBackupTime || "03:00"}
+                onChange={(e) => setConfig({ ...config, webdav: { ...config.webdav, autoBackupTime: e.target.value } })}
               />
             </div>
             <div className="flex gap-2 pt-2">

@@ -4,10 +4,28 @@ const TASK_ID = 'webdav_backup';
 
 function registerBackupRoutes(app, { loadSettings, saveSettings, getScheduler, logger, storage, taskRegistry }) {
   let backupTimer = null;
-  let initialBackupTimer = null;
 
   function hasCompleteAutoBackupConfig(config = {}) {
     return !!(config.autoBackup && config.url && config.username && config.password);
+  }
+
+  function normalizeBackupTime(value) {
+    if (typeof value !== 'string') return '03:00';
+    return /^([01]\d|2[0-3]):([0-5]\d)$/.test(value) ? value : '03:00';
+  }
+
+  function getNextScheduledBackupDate(config = {}, from = new Date()) {
+    const [hours, minutes] = normalizeBackupTime(config.autoBackupTime).split(':').map(Number);
+    const nextRun = new Date(from);
+    nextRun.setHours(hours, minutes, 0, 0);
+    if (nextRun <= from) {
+      nextRun.setDate(nextRun.getDate() + 1);
+    }
+    return nextRun;
+  }
+
+  function getBackupIntervalLabel(config = {}) {
+    return `每天 ${normalizeBackupTime(config.autoBackupTime)}`;
   }
 
   function createBackupData(settings) {
@@ -56,8 +74,8 @@ function registerBackupRoutes(app, { loadSettings, saveSettings, getScheduler, l
     }
   }
 
-  function getNextRun(intervalMs) {
-    return new Date(Date.now() + intervalMs).toISOString();
+  function getNextRun(config) {
+    return getNextScheduledBackupDate(config).toISOString();
   }
 
   async function runAutoBackup() {
@@ -68,14 +86,13 @@ function registerBackupRoutes(app, { loadSettings, saveSettings, getScheduler, l
       return;
     }
 
-    const intervalMs = (config.autoBackupInterval || 24) * 60 * 60 * 1000;
     const startedAt = new Date().toISOString();
     taskRegistry?.markRunStart(TASK_ID, {
       type: 'backup',
       name: 'WebDAV 自动备份',
       description: '备份数据到 WebDAV 服务器',
-      interval: `${config.autoBackupInterval || 24} 小时`,
-      nextRun: getNextRun(intervalMs),
+      interval: getBackupIntervalLabel(config),
+      nextRun: getNextRun(config),
     });
 
     logger.info('⏰ 执行定时 WebDAV 备份...');
@@ -94,7 +111,7 @@ function registerBackupRoutes(app, { loadSettings, saveSettings, getScheduler, l
         });
         taskRegistry?.markRunSuccess(TASK_ID, {
           startedAt,
-          nextRun: getNextRun(intervalMs),
+          nextRun: getNextRun(config),
         });
         await cleanOldBackups(config);
       } else {
@@ -107,7 +124,7 @@ function registerBackupRoutes(app, { loadSettings, saveSettings, getScheduler, l
         });
         taskRegistry?.markRunError(TASK_ID, new Error(result.error || 'WebDAV 备份失败'), {
           startedAt,
-          nextRun: getNextRun(intervalMs),
+          nextRun: getNextRun(config),
         });
       }
     } catch (error) {
@@ -120,38 +137,35 @@ function registerBackupRoutes(app, { loadSettings, saveSettings, getScheduler, l
       });
       taskRegistry?.markRunError(TASK_ID, error, {
         startedAt,
-        nextRun: getNextRun(intervalMs),
+        nextRun: getNextRun(config),
       });
+    } finally {
+      startBackupScheduler();
     }
   }
 
   function startBackupScheduler() {
     if (backupTimer) {
-      clearInterval(backupTimer);
+      clearTimeout(backupTimer);
       backupTimer = null;
     }
-    if (initialBackupTimer) {
-      clearTimeout(initialBackupTimer);
-      initialBackupTimer = null;
-    }
-
     const settings = loadSettings();
     const config = settings.webdav || {};
 
     if (hasCompleteAutoBackupConfig(config)) {
-      const intervalMs = (config.autoBackupInterval || 24) * 60 * 60 * 1000;
-      logger.info(`📅 启动定时备份，间隔: ${config.autoBackupInterval || 24} 小时`);
+      const nextRun = getNextScheduledBackupDate(config);
+      const delayMs = Math.max(nextRun.getTime() - Date.now(), 1000);
+      logger.info(`📅 启动定时备份，时间: ${normalizeBackupTime(config.autoBackupTime)}`);
       taskRegistry?.upsertTask(TASK_ID, {
         type: 'backup',
         name: 'WebDAV 自动备份',
         description: '备份数据到 WebDAV 服务器',
-        interval: `${config.autoBackupInterval || 24} 小时`,
+        interval: getBackupIntervalLabel(config),
         status: 'active',
         error: null,
-        nextRun: new Date(Date.now() + 5000).toISOString(),
+        nextRun: nextRun.toISOString(),
       });
-      initialBackupTimer = setTimeout(runAutoBackup, 5000);
-      backupTimer = setInterval(runAutoBackup, intervalMs);
+      backupTimer = setTimeout(runAutoBackup, delayMs);
     } else {
       taskRegistry?.removeTask(TASK_ID);
     }

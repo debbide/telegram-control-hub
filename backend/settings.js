@@ -48,6 +48,7 @@ const DEFAULT_SETTINGS = {
     remotePath: '/tgbot-backup',
     autoBackup: false,
     autoBackupInterval: 24, // 小时
+    autoBackupTime: '03:00',
   },
 };
 

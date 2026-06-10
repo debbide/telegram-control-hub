@@ -30,6 +30,7 @@ services:
       - PORT=3001
       - NODE_ENV=production
       - DATA_PATH=/app/data
+      - TZ=Asia/Shanghai
     volumes:
       - rss-data:/app/data
     networks:
@@ -53,6 +54,7 @@ services:
       - CACHE_EXPIRE=300
       - ACCESS_KEY=
       - ALLOW_ORIGIN=*
+      - TZ=Asia/Shanghai
     networks:
       - bot-network
 

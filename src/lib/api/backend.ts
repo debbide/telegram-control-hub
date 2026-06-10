@@ -108,6 +108,7 @@ export interface BotSettings {
     remotePath?: string;
     autoBackup?: boolean;
     autoBackupInterval?: number;
+    autoBackupTime?: string;
   };
 }
 

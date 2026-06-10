@@ -188,7 +188,7 @@ function getWebdavSchedulerConfig(settings) {
     username: config.username || '',
     password: config.password || '',
     remotePath: config.remotePath || '/tgbot-backup',
-    autoBackupInterval: Number(config.autoBackupInterval || 24),
+    autoBackupTime: config.autoBackupTime || '03:00',
   };
 }
 
