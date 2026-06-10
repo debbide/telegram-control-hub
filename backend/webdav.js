@@ -10,6 +10,20 @@ const { URL } = require('url');
 /**
  * WebDAV 请求封装
  */
+function normalizeDirPath(remotePath) {
+    if (!remotePath || remotePath === '/') return '/';
+    const withLeadingSlash = remotePath.startsWith('/') ? remotePath : `/${remotePath}`;
+    return withLeadingSlash.endsWith('/') ? withLeadingSlash : `${withLeadingSlash}/`;
+}
+
+function joinRemotePath(dirPath, filename) {
+    return `${normalizeDirPath(dirPath)}${filename}`;
+}
+
+function isRedirectStatus(status) {
+    return [301, 302, 307, 308].includes(status);
+}
+
 async function webdavRequest(config, method, remotePath, body = null, timeoutOverride = null) {
     const { url, username, password, timeout = 120000 } = config;
     const requestTimeout = timeoutOverride || timeout;
@@ -72,12 +86,12 @@ async function testConnection(config) {
         if (result.status === 401) {
             return { success: false, error: '认证失败，请检查用户名和密码' };
         }
-        if (!result.ok && result.status !== 207) {
+        if (!result.ok && result.status !== 207 && result.status !== 403) {
             return { success: false, error: `连接失败: HTTP ${result.status}` };
         }
 
         const remotePath = config.remotePath || '/tgbot-backup';
-        const testPath = `${remotePath}/connection_test_${Date.now()}.txt`;
+        const testPath = joinRemotePath(remotePath, `connection_test_${Date.now()}.txt`);
         const uploadResult = await uploadFile(config, testPath, 'webdav connection test');
 
         if (!uploadResult.success) {
@@ -97,16 +111,21 @@ async function testConnection(config) {
 async function ensureDir(config, remotePath) {
     if (!remotePath || remotePath === '/') return true;
 
-    const existing = await webdavRequest(config, 'PROPFIND', remotePath, null, 30000);
+    const dirPath = normalizeDirPath(remotePath);
+    const existing = await webdavRequest(config, 'PROPFIND', dirPath, null, 30000);
     if (existing.ok || existing.status === 207) return true;
 
-    const parts = remotePath.split('/').filter(p => p);
-    let currentPath = '';
+    const parts = dirPath.split('/').filter(p => p);
+    let currentPath = '/';
 
     for (const part of parts) {
-        currentPath += '/' + part;
+        currentPath += `${part}/`;
         const result = await webdavRequest(config, 'MKCOL', currentPath, null, 30000);
         if (result.status !== 201 && result.status !== 405) {
+            if (isRedirectStatus(result.status)) {
+                const recheck = await webdavRequest(config, 'PROPFIND', currentPath, null, 30000);
+                if (recheck.ok || recheck.status === 207) continue;
+            }
             return { success: false, error: `创建目录失败: ${currentPath} HTTP ${result.status}` };
         }
     }
